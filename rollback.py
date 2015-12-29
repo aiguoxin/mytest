@@ -78,6 +78,7 @@ def roll_back_task(version):
         run('rm -fr /usr/local/jetty/webapps/* '+link_file)
         run('cp '+version_file+' '+link_file)
         if run('cd /usr/local/jetty/webapps/ && ln -s ' + link_file + ' ' + artifactId + '.war').succeeded:
+            run("ps aux | grep 'jetty' | awk -F ' ' '{ print $2 }' | xargs kill -s 9")
             execute(jetty_restart)
             output.write(green(env.host_string + " roll back success"))
             status = "succeeded"

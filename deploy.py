@@ -135,7 +135,7 @@ class Parameter:
 
 def deploy_package(area, host, version, deploy):
     print(green('start to mvn package...'))
-    execute(package)
+    # execute(package)
     sys.stdout.flush()
     sys.stderr.flush()
     if area is not None:
@@ -184,19 +184,10 @@ def deploy_package_parallel(area, host_list, version):
 
 
 @task
-@parallel(pool_size=5)
+@parallel(pool_size=3)
 def deploy_task(version):
     output = StringIO.StringIO()
-    execute(copy_dependencies)
-    output.write(green("copy_dependencies success\n"))
-    deploy_link(version)
-    output.write(green("deploy success\n"))
-    execute(jetty_restart)
-    output.write(green("jetty restart success"))
-    return (output, "ok")
-
-
-def deploy_link(version):
+    # execute(copy_dependencies)
     artifactId = Utils.getArtifactId('../pom.xml')
     run('mkdir -p /data/logs/jetty')
     run('mkdir -p /data/' + artifactId)
@@ -210,10 +201,15 @@ def deploy_link(version):
     run('rm -fr /usr/local/jetty/webapps/* '+link_file)
     run('cp '+version_file+' '+link_file)
     if run('cd /usr/local/jetty/webapps/ && ln -s ' + link_file + ' ' + artifactId + '.war').succeeded:
+        run("ps aux | grep 'jetty' | awk -F ' ' '{ print $2 }' | xargs kill -s 9")
         execute(jetty_restart)
-        print green(env.host_string + " deploy succeeded")
+        output.write(green(env.host_string + " deploy succeeded"))
+        status = "succeeded"
     else:
-        print red(env.host_string + " deploy failed")
+        output.write(red(env.host_string + " deploy failed"))
+        status = "failed"
+    return (output, status)
+
 
 
 def upload_scripts(area, host):
