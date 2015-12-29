@@ -205,9 +205,11 @@ def deploy_link(version):
         for (src, dst) in env.resources:
             put(src, dst)
     version_file = '/data/backup/' + artifactId + '_' + version + '.war'
+    link_file = '/data/backup/' + artifactId + '.war'
     put('../target/' + artifactId + '.war', version_file)
-    run('rm -fr /usr/local/jetty/webapps/*')
-    if run('cd /usr/local/jetty/webapps/ && ln -s ' + version_file + ' ' + artifactId + '.war').succeeded:
+    run('rm -fr /usr/local/jetty/webapps/* '+link_file)
+    run('cp '+version_file+' '+link_file)
+    if run('cd /usr/local/jetty/webapps/ && ln -s ' + link_file + ' ' + artifactId + '.war').succeeded:
         execute(jetty_restart)
         print green(env.host_string + " deploy succeeded")
     else:
